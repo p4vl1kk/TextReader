@@ -1,0 +1,14 @@
+{% macro render_tree(item, parent) %}
+    {% if item.type == "directory" %}
+    <li>
+        <a href="{{ url_for('list_directory', directory=(parent + '/' + item.name) if parent else item.name) }}">{{ item.name }}</a>
+        <ul>
+            {% for child in item.children %}
+            {{ render_tree(child, (parent + '/' + item.name) if parent else item.name) }}
+            {% endfor %}
+        </ul>
+    </li>
+    {% else %}
+    <li><a href="{{ url_for('view_file', filename=item.path) }}">{{ item.name }}</a></li>
+    {% endif %}
+{% endmacro %}

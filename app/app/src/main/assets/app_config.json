@@ -1,0 +1,7 @@
+{
+  "appName": "TextReader",
+  "version": "1.0.1",
+  "developer": "Pavel Lapa",
+  "description": "An app to read text files.",
+  "updateUrl": "https://example.com/update"
+}
