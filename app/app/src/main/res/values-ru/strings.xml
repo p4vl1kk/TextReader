@@ -14,4 +14,8 @@
     <string name="app_title">Текстовый редактор</string>
     <string name="editor_title">Текстовый редактор</string>
     <string name="settings_title">Настройки</string>
+    <string name="version">Версия</string>
+    <string name="current_version">Текущая версия</string>
+    <string name="latest_version">Последняя версия</string>
+    <string name="no_update_needed">Обновление не требуется</string>
 </resources>

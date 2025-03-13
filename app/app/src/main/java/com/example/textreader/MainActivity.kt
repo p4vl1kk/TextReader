@@ -160,7 +160,7 @@ fun MainScreenContent(
         }
 
         Text(
-            text = "Version: $version",
+            text = "${stringResource(R.string.version)}: $version",
             fontSize = 14.sp,
             fontWeight = FontWeight.Normal,
             modifier = Modifier.padding(bottom = 16.dp)

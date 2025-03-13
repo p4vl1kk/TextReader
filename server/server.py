@@ -1,14 +1,10 @@
-from flask import Flask, request, jsonify, render_template, send_from_directory, redirect, url_for
+from flask import Flask, request, jsonify, render_template, redirect, send_from_directory, json
 from pathlib import Path
 import logging
-import zipfile
-import os
 
 app = Flask(__name__)
 UPLOAD_FOLDER = 'uploads'
-CONFIG_FOLDER = 'config_files'
 Path(UPLOAD_FOLDER).mkdir(parents=True, exist_ok=True)
-Path(CONFIG_FOLDER).mkdir(parents=True, exist_ok=True)
 
 logging.basicConfig(level=logging.DEBUG)
 
@@ -23,27 +19,22 @@ def upload_file():
         if 'file' not in request.files:
             logging.error('No file part in the request')
             return jsonify({"message": "No file part in the request"}), 400
+
         file = request.files['file']
         if file.filename == '':
             logging.error('No selected file')
             return jsonify({"message": "No selected file"}), 400
 
-        file_ext = file.filename.split('.')[-1].lower()
-        if file_ext == 'json':
-            file_path = Path(CONFIG_FOLDER) / file.filename
-        else:
-            file_path = Path(UPLOAD_FOLDER) / file.filename
+        file_path = Path(UPLOAD_FOLDER) / file.filename
 
-        file.save(file_path)
-        logging.debug(f'File saved to {file_path}')
+        try:
+            file.save(file_path)
+            logging.debug(f'File saved to {file_path}')
+        except Exception as e:
+            logging.error(f'Error while saving file: {e}')
+            return jsonify({"message": "Failed to save file"}), 500
 
-        if file_ext != 'json' and zipfile.is_zipfile(file_path):
-            with zipfile.ZipFile(file_path, 'r') as zip_ref:
-                zip_ref.extractall(UPLOAD_FOLDER)
-            os.remove(file_path)
-            logging.debug(f'File unzipped and original ZIP file removed: {file_path}')
-
-        return jsonify({"message": "File uploaded and processed successfully"})
+        return jsonify({"message": f"File '{file.filename}' uploaded successfully"})
     return render_template('upload.html')
 
 @app.route('/files', methods=['GET'])
@@ -57,35 +48,51 @@ def list_files(directory=""):
     file_tree = build_file_tree(base_path)
     return render_template('files.html', file_tree=file_tree, directory=directory)
 
+
 @app.route('/file/<path:filename>', methods=['GET'])
 def view_file(filename):
     logging.debug(f'View file route called for {filename}')
-    if Path(CONFIG_FOLDER) / filename in Path(CONFIG_FOLDER).iterdir():
-        file_path = Path(CONFIG_FOLDER) / filename
-    else:
-        file_path = Path(UPLOAD_FOLDER) / filename
+
+    file_path = Path(UPLOAD_FOLDER) / filename
 
     if file_path.exists() and file_path.is_file():
-        with open(file_path, 'r', encoding='utf-8') as f:
-            file_content = f.read()
-        return render_template('view_file.html', filename=filename, file_content=file_content)
+        file_ext = file_path.suffix.lower()
+        if file_ext in ['.txt', '.json', '.log']:
+            with open(file_path, 'r', encoding='utf-8') as f:
+                file_content = f.read()
+            return render_template('view_file.html', filename=filename, file_content=file_content)
+        else:
+            return send_from_directory(file_path.parent, file_path.name, as_attachment=True)
     else:
         return jsonify({"message": "File not found"}), 404
+
 
 @app.route('/delete_file/<path:filename>', methods=['POST'])
 def delete_file(filename):
     logging.debug(f'Delete file route called for {filename}')
-    if Path(CONFIG_FOLDER) / filename in Path(CONFIG_FOLDER).iterdir():
-        file_path = Path(CONFIG_FOLDER) / filename
-    else:
-        file_path = Path(UPLOAD_FOLDER) / filename
+
+    file_path = Path(UPLOAD_FOLDER) / filename
 
     if file_path.exists() and file_path.is_file():
-        file_path.unlink()
-        logging.debug(f'File {filename} deleted')
-        return redirect(request.referrer)
+        try:
+            file_path.unlink()
+            logging.debug(f'File {filename} deleted')
+            return redirect(request.referrer)
+        except Exception as e:
+            logging.error(f'Error deleting file: {e}')
+            return jsonify({"message": "Failed to delete file"}), 500
     else:
         return jsonify({"message": "File not found"}), 404
+
+@app.route('/files', methods=['GET'])
+def get_version():
+    version_file = Path(UPLOAD_FOLDER) / "app_config.json"
+    if version_file.exists():
+        with open(version_file, 'r', encoding='utf-8') as f:
+            return jsonify(json.load(f))
+    else:
+        return jsonify({"message": "Version file not found"}), 404
+
 
 def build_file_tree(path):
     tree = []

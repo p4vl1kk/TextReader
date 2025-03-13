@@ -74,6 +74,12 @@
         form {
             display: inline;
         }
+
+        .message {
+            color: #555;
+            font-size: 16px;
+            margin: 20px;
+        }
     </style>
     <script>
         function confirmDelete() {
@@ -84,6 +90,7 @@
 <body>
     <h1>Uploaded Files</h1>
     <div class="container">
+        {% if file_tree %}
         <ul>
             {% for item in file_tree %}
             <li>
@@ -98,6 +105,9 @@
             </li>
             {% endfor %}
         </ul>
+        {% else %}
+        <div class="message">No files uploaded yet.</div>
+        {% endif %}
     </div>
 </body>
 </html>

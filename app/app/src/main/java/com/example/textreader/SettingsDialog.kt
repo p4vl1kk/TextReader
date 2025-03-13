@@ -48,10 +48,20 @@ fun SettingsDialog(onDismiss: () -> Unit) {
                 ) {
                     Text(text = stringResource(R.string.language), fontSize = 18.sp)
                 }
-                Spacer(modifier = Modifier.height(8.dp))
+                /*Spacer(modifier = Modifier.height(8.dp))
                 Button(
                     onClick = {
 
+                    },
+                    modifier = Modifier.fillMaxWidth(),
+                    colors = ButtonDefaults.buttonColors(containerColor = Color(0xFF80CBC4))
+                ) {
+                    Text(text = stringResource(R.string.theme), fontSize = 18.sp)
+                }*/
+                Spacer(modifier = Modifier.height(8.dp))
+                Button(
+                    onClick = {
+                        showUpdateDialog = true
                     },
                     modifier = Modifier.fillMaxWidth(),
                     colors = ButtonDefaults.buttonColors(containerColor = Color(0xFF80CBC4))
